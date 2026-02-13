@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:inventory_app/bloc/inventory_cubit.dart';
+import 'package:inventory_app/features/inventory/presentation/bloc/inventory_state.dart';
 
 class CartScreen extends StatelessWidget {
-  CartScreen({Key? key}) : super(key: key);
+  const CartScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

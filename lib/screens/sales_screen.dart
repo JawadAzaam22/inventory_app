@@ -7,7 +7,7 @@ import 'package:inventory_app/bloc/inventory_cubit.dart';
 class SalesScreen extends StatefulWidget {
   final Map<String, dynamic> product;
 
-  const SalesScreen({Key? key, required this.product}) : super(key: key);
+  const SalesScreen({super.key, required this.product});
 
   @override
   State<SalesScreen> createState() => _SalesScreenState();
@@ -100,12 +100,12 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _buildProductInfo(String title, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 16)),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(title, style: const TextStyle(fontSize: 16)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );

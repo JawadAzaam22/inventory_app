@@ -5,12 +5,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:inventory_app/bloc/inventory_cubit.dart';
-import 'package:path_provider/path_provider.dart'; // لاستخدام getApplicationDocumentsDirectory
-import 'package:path/path.dart' as p; // لاستخدام path.join و path.extension
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class AddProductScreen extends StatefulWidget {
+  const AddProductScreen({super.key});
+
   @override
-  _AddProductScreenState createState() => _AddProductScreenState();
+  @override
+  State<AddProductScreen> createState() => _AddProductScreenState();
 }
 
 class _AddProductScreenState extends State<AddProductScreen> {
@@ -25,7 +28,7 @@ class _AddProductScreenState extends State<AddProductScreen> {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       final appDocDir = await getApplicationDocumentsDirectory();
-      final imagesDir = Directory(p.join(appDocDir.path, 'app_images')); // مجلد الصور
+      final imagesDir = Directory(p.join(appDocDir.path, 'app_images'));
       if (!await imagesDir.exists()) {
         await imagesDir.create(recursive: true);
       }

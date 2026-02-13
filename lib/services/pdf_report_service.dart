@@ -20,7 +20,7 @@ class PdfReportService {
           return [
             pw.Header(level: 0, text: 'تقرير المبيعات والربح'),
             pw.Divider(),
-            pw.Table.fromTextArray(
+            pw.TableHelper.fromTextArray(
               headers: ['المنتج', 'الكمية', 'القيمة بالدولار', 'القيمة بالليرة'],
               data: state.sales.map((sale) {
                 final product = state.allProducts.firstWhere(
@@ -41,12 +41,12 @@ class PdfReportService {
             ),
             pw.SizedBox(height: 20),
             pw.Header(text: 'تحليل الربح والخسارة', level: 1),
-            pw.Text(
-                'إجمالي الربح الفعلي: ${profitAnalysis['actual']?.toStringAsFixed(2) ?? 'غير متوفر'} ليرة'),
-            pw.Text(
-                'أفضل سيناريو ربح: ${profitAnalysis['best_case']?.toStringAsFixed(2) ?? 'غير متوفر'} ليرة'),
-            pw.Text(
-                'الفرق المحتمل: ${profitAnalysis['difference']?.toStringAsFixed(2) ?? 'غير متوفر'} ليرة'),
+      pw.Text(
+        'إجمالي الربح الفعلي: ${profitAnalysis['actual']?.toStringAsFixed(2) ?? 'غير متوفر'} ليرة'),
+      pw.Text(
+        'أفضل سيناريو ربح: ${profitAnalysis['best_case']?.toStringAsFixed(2) ?? 'غير متوفر'} ليرة'),
+      pw.Text(
+        'الفرق المحتمل: ${profitAnalysis['best_difference']?.toStringAsFixed(2) ?? 'غير متوفر'} ليرة'),
           ];
         },
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:inventory_app/database/db_helper.dart';
 import 'package:inventory_app/features/inventory/presentation/bloc/inventory_state.dart';
 
@@ -16,9 +17,16 @@ class InventoryCubit extends Cubit<InventoryState> {
       final exchangeRates = await db.query('exchange_rates');
       final offers = await db.query('offers');
 
+  debugPrint('loadAll: products=${allProducts.length}, sales=${sales.length}, exchangeRates=${exchangeRates.length}, offers=${offers.length}');
+
       double currentRate = 0.0;
       if (exchangeRates.isNotEmpty) {
-        currentRate = exchangeRates.last['rate'] as double;
+        final lastRate = exchangeRates.last['rate'];
+        if (lastRate is num) {
+          currentRate = lastRate.toDouble();
+        } else {
+          currentRate = double.tryParse(lastRate?.toString() ?? '') ?? 0.0;
+        }
       }
 
       final categoriesSet = <String>{};
@@ -38,6 +46,7 @@ class InventoryCubit extends Cubit<InventoryState> {
         sales: sales,
         exchangeRates: exchangeRates,
         offers: offers,
+  cartItems: state.cartItems,
         categories: categoriesSet.toList()..sort(),
         currentRate: currentRate,
         isLoading: false,
@@ -50,7 +59,7 @@ class InventoryCubit extends Cubit<InventoryState> {
     }
   }
 
-  // --- منتجات ---
+  
   Future<void> addProduct(Map<String, dynamic> product) async {
     final db = await _dbHelper.database;
     await db.insert('products', product);
@@ -75,7 +84,7 @@ class InventoryCubit extends Cubit<InventoryState> {
     await loadAll();
   }
 
-  // --- المبيعات المنفردة ---
+  
   Future<String?> addSale(Map<String, dynamic> sale) async {
     final db = await _dbHelper.database;
     final allProducts = state.allProducts;
@@ -103,7 +112,7 @@ class InventoryCubit extends Cubit<InventoryState> {
     return null;
   }
 
-  // --- سعر الصرف ---
+  
   Future<void> addExchangeRate(double rate) async {
     final db = await _dbHelper.database;
     await db.insert('exchange_rates', {
@@ -121,12 +130,18 @@ class InventoryCubit extends Cubit<InventoryState> {
     double totalBestCase = 0.0;
     double totalWorstCase = 0.0;
 
-    for (var sale in state.sales) {
-      totalActual +=
-          (sale['totalDollars'] as double) * (sale['exchangeRate'] as double);
-      totalBestCase += (sale['totalDollars'] as double) * maxRate;
-      totalWorstCase += (sale['totalDollars'] as double) * minRate;
-    }
+  for (var sale in state.sales) {
+    final totalDollars = (sale['totalDollars'] is num)
+      ? (sale['totalDollars'] as num).toDouble()
+      : double.tryParse(sale['totalDollars']?.toString() ?? '') ?? 0.0;
+    final exchangeRate = (sale['exchangeRate'] is num)
+      ? (sale['exchangeRate'] as num).toDouble()
+      : double.tryParse(sale['exchangeRate']?.toString() ?? '') ?? 0.0;
+
+    totalActual += totalDollars * exchangeRate;
+    totalBestCase += totalDollars * maxRate;
+    totalWorstCase += totalDollars * minRate;
+  }
 
     return {
       'actual': totalActual,
@@ -140,7 +155,11 @@ class InventoryCubit extends Cubit<InventoryState> {
   double _getMaxExchangeRate() {
     return state.exchangeRates.isNotEmpty
         ? state.exchangeRates
-            .map((e) => e['rate'] as double)
+            .map((e) {
+              final r = e['rate'];
+              if (r is num) return r.toDouble();
+              return double.tryParse(r?.toString() ?? '') ?? 0.0;
+            })
             .reduce((a, b) => a > b ? a : b)
         : 0.0;
   }
@@ -148,16 +167,21 @@ class InventoryCubit extends Cubit<InventoryState> {
   double _getMinExchangeRate() {
     return state.exchangeRates.isNotEmpty
         ? state.exchangeRates
-            .map((e) => e['rate'] as double)
+            .map((e) {
+              final r = e['rate'];
+              if (r is num) return r.toDouble();
+              return double.tryParse(r?.toString() ?? '') ?? 0.0;
+            })
             .reduce((a, b) => a < b ? a : b)
         : 0.0;
   }
 
-  // --- العروض ---
+  
   Future<int> addOffer(Map<String, dynamic> offer) async {
     final db = await _dbHelper.database;
     final id = await db.insert('offers', offer);
     await loadAll();
+  debugPrint('Offer added with id: $id');
     return id;
   }
 
@@ -179,6 +203,97 @@ class InventoryCubit extends Cubit<InventoryState> {
         'quantityPerOffer': entry.value,
       });
     }
+  await loadAll();
+  }
+
+  
+  void addToCart(Map<String, dynamic> product, int quantity) {
+    if (quantity <= 0) return;
+    final productId = product['id'] as int;
+    final all = List<Map<String, dynamic>>.from(state.cartItems);
+    final index = all.indexWhere((item) => item['productId'] == productId);
+    if (index != -1) {
+      final updated = Map<String, dynamic>.from(all[index]);
+      updated['quantity'] = (updated['quantity'] as int) + quantity;
+      all[index] = updated;
+    } else {
+      all.add({
+        'productId': productId,
+        'name': product['name'],
+        'priceInDollars': product['priceInDollars'],
+        'quantity': quantity,
+      });
+    }
+    emit(state.copyWith(cartItems: all));
+  }
+
+  void updateCartQuantity(int productId, int quantity) {
+    final all = List<Map<String, dynamic>>.from(state.cartItems);
+    final index = all.indexWhere((item) => item['productId'] == productId);
+    if (index == -1) return;
+    if (quantity <= 0) {
+      all.removeAt(index);
+    } else {
+      final updated = Map<String, dynamic>.from(all[index]);
+      updated['quantity'] = quantity;
+      all[index] = updated;
+    }
+    emit(state.copyWith(cartItems: all));
+  }
+
+  void removeFromCart(int productId) {
+    final all = List<Map<String, dynamic>>.from(state.cartItems);
+    all.removeWhere((item) => item['productId'] == productId);
+    emit(state.copyWith(cartItems: all));
+  }
+
+  void clearCart() {
+    emit(state.copyWith(cartItems: []));
+  }
+
+  Future<String?> checkoutCart() async {
+    if (state.cartItems.isEmpty) return 'السلة فارغة.';
+    try {
+      final db = await _dbHelper.database;
+    
+      for (final item in state.cartItems) {
+        final productId = item['productId'] as int;
+        final quantity = item['quantity'] as int;
+        final productIndex = state.allProducts.indexWhere((p) => p['id'] == productId);
+        if (productIndex == -1) return 'أحد المنتجات في السلة غير موجود بعد الآن.';
+        final product = state.allProducts[productIndex];
+        if (quantity > (product['quantity'] as int)) {
+          return 'الكمية المطلوبة من المنتج "${product['name']}" أكبر من المخزون المتاح.';
+        }
+      }
+
+      for (final item in state.cartItems) {
+        final productId = item['productId'] as int;
+        final quantity = item['quantity'] as int;
+        final productIndex = state.allProducts.indexWhere((p) => p['id'] == productId);
+        final product = state.allProducts[productIndex];
+        final newQuantity = (product['quantity'] as int) - quantity;
+        await db.update(
+          'products',
+          {'quantity': newQuantity},
+          where: 'id = ?',
+          whereArgs: [productId],
+        );
+        await db.insert('sales', {
+          'productId': productId,
+          'quantitySold': quantity,
+          'totalDollars': (product['priceInDollars'] as num) * quantity,
+          'exchangeRate': state.currentRate,
+          'date': DateTime.now().toIso8601String(),
+        });
+      }
+
+      clearCart();
+      await loadAll();
+      return null;
+    } catch (e) {
+      return 'فشل أثناء إتمام عملية البيع: $e';
+    }
   }
 
   Future<String?> sellOffer(
@@ -196,7 +311,7 @@ class InventoryCubit extends Cubit<InventoryState> {
       return 'لم يتم ربط أي منتجات بهذا العرض.';
     }
 
-    // التحقق من توفر الكميات
+    
     for (final item in items) {
       final productId = item['productId'] as int;
       final perOffer = item['quantityPerOffer'] as int;
@@ -213,7 +328,7 @@ class InventoryCubit extends Cubit<InventoryState> {
       }
     }
 
-    // تنفيذ البيع وتحديث المخزون
+    
     for (final item in items) {
       final productId = item['productId'] as int;
       final perOffer = item['quantityPerOffer'] as int;
@@ -246,7 +361,7 @@ class InventoryCubit extends Cubit<InventoryState> {
     return null;
   }
 
-  // --- البحث عن المنتجات ---
+  
   void searchProducts(String query) {
     final filtered = _filterProductsInternal(state.allProducts, query);
     emit(state.copyWith(products: filtered, searchQuery: query));
@@ -267,7 +382,7 @@ class InventoryCubit extends Cubit<InventoryState> {
     }).toList();
   }
 
-  // --- التصنيفات ---
+  
   void addCategory(String category) {
     final trimmed = category.trim();
     if (trimmed.isEmpty) return;

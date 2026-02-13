@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:inventory_app/bloc/inventory_cubit.dart';
+import 'package:inventory_app/main.dart';
+import 'package:inventory_app/features/inventory/presentation/bloc/inventory_state.dart';
 import 'package:inventory_app/screens/add_offer_screen.dart';
 import 'package:inventory_app/screens/add_product_screen.dart';
 import 'package:inventory_app/screens/backup_restore_screen.dart';
@@ -13,7 +15,7 @@ import 'package:inventory_app/screens/reports_screen.dart';
 import 'package:inventory_app/screens/sales_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -35,14 +37,62 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildProductsPage(),
-          _buildOffersPage(),
-          _buildSettingsPage(),
-        ],
-      ),
+      body: BlocBuilder<InventoryCubit, InventoryState>(builder: (context, state) {
+        return Column(
+          children: [
+            if (state.isLoading)
+              const LinearProgressIndicator(),
+            if (state.errorMessage != null)
+              Container(
+                color: Colors.red[700],
+                padding: const EdgeInsets.all(8),
+                width: double.infinity,
+                child: Text(
+                  state.errorMessage!,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('منتجات: ${state.products.length}'),
+                  Text('عروض: ${state.offers.length}'),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                children: [
+                  Offstage(
+                    offstage: _selectedIndex != 0,
+                    child: TickerMode(
+                      enabled: _selectedIndex == 0,
+                      child: _buildProductsPage(),
+                    ),
+                  ),
+                  Offstage(
+                    offstage: _selectedIndex != 1,
+                    child: TickerMode(
+                      enabled: _selectedIndex == 1,
+                      child: _buildOffersPage(),
+                    ),
+                  ),
+                  Offstage(
+                    offstage: _selectedIndex != 2,
+                    child: TickerMode(
+                      enabled: _selectedIndex == 2,
+                      child: _buildSettingsPage(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }),
       floatingActionButton: _selectedIndex == 0
           ? Column(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -50,13 +100,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 FloatingActionButton(
                   heroTag: 'addProduct',
                   child: const Icon(Icons.add_box),
-                  onPressed: () => Get.to(() => AddProductScreen()),
+                  onPressed: () => Get.to(() => const AddProductScreen()),
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
                   heroTag: 'addOffer',
                   child: const Icon(Icons.local_offer),
-                  onPressed: () => Get.to(() => AddOfferScreen()),
+                  onPressed: () => Get.to(() => const AddOfferScreen()),
                 ),
               ],
             )
@@ -253,14 +303,44 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListTile(
             leading: const Icon(Icons.color_lens_outlined),
             title: const Text('المظهر والثيم'),
-            subtitle: const Text('يتبع إعداد النظام (فاتح / داكن)'),
+            subtitle: const Text('اضغط لاختيار الثيم (نظام/فاتح/داكن)'),
+            onTap: () {
+              Get.defaultDialog(
+                title: 'اختر المظهر',
+                content: Column(
+                  children: [
+                    ListTile(
+                      title: const Text('يتبع النظام'),
+                      onTap: () {
+                        MyApp.of(context)?.setThemeMode(ThemeMode.system);
+                        Get.back();
+                      },
+                    ),
+                    ListTile(
+                      title: const Text('فاتح'),
+                      onTap: () {
+                        MyApp.of(context)?.setThemeMode(ThemeMode.light);
+                        Get.back();
+                      },
+                    ),
+                    ListTile(
+                      title: const Text('داكن'),
+                      onTap: () {
+                        MyApp.of(context)?.setThemeMode(ThemeMode.dark);
+                        Get.back();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
         Card(
           child: ListTile(
             leading: const Icon(Icons.insert_chart_outlined),
             title: const Text('التقارير'),
-            onTap: () => Get.to(() => ReportsScreen()),
+            onTap: () => Get.to(() => const ReportsScreen()),
           ),
         ),
         Card(
@@ -274,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListTile(
             leading: const Icon(Icons.backup),
             title: const Text('النسخ الاحتياطي والاستعادة'),
-            onTap: () => Get.to(() => BackupRestoreScreen()),
+            onTap: () => Get.to(() => const BackupRestoreScreen()),
           ),
         ),
       ],
@@ -295,11 +375,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     File(product['imagePath']),
                     fit: BoxFit.cover,
                     width: double.infinity,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Placeholder(
-                            child: Icon(Icons.image_not_supported, size: 50)),
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[300],
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.image_not_supported, size: 50),
+                    ),
                   )
-                : const Placeholder(child: Icon(Icons.image, size: 50)),
+                : Container(
+                    color: Colors.grey[300],
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.image, size: 50),
+                  ),
           ),
           Expanded(
             flex: 2,
@@ -351,8 +437,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
   Widget _buildOfferCard(Map<String, dynamic> offer) {
+    final String name = (offer['name'] ?? 'بدون اسم').toString();
+    final String description = (offer['description'] ?? 'لا يوجد وصف').toString();
+    final double price = (offer['priceInLira'] is num)
+        ? (offer['priceInLira'] as num).toDouble()
+        : double.tryParse(offer['priceInLira']?.toString() ?? '') ?? 0.0;
+
     return Card(
       elevation: 3,
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -360,60 +451,63 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          offer['imagePath'] != null && offer['imagePath'].isNotEmpty
-              ? Image.file(
-                  File(offer['imagePath']),
-                  fit: BoxFit.cover,
+          
+          offer['imagePath'] != null && offer['imagePath'].toString().isNotEmpty
+              ? SizedBox(
                   height: 180,
                   width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Placeholder(
-                          child: Icon(Icons.image_not_supported, size: 80)),
+                  child: Image.file(
+                    File(offer['imagePath']),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[300],
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.image_not_supported, size: 80),
+                    ),
+                  ),
                 )
-              : const Placeholder(child: Icon(Icons.image, size: 80)),
+              : Container(
+                  height: 180,
+                  width: double.infinity,
+                  color: Colors.grey[300],
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.image, size: 80),
+                ),
+          
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  offer['name'],
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+                  name,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  offer['description'],
-                  style:
-                      TextStyle(fontSize: 15, color: Colors.grey[700]),
+                  description,
+                  style: TextStyle(fontSize: 15, color: Colors.grey[700]),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'السعر: ${offer['priceInLira'].toStringAsFixed(2)} ل.س',
+                  'السعر: ${price.toStringAsFixed(2)} ل.س',
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.green[700]),
                 ),
                 const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _showSellOfferDialog(context, offer),
-                      icon: const Icon(Icons.shopping_cart_checkout),
-                      label: const Text('بيع العرض'),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteOffer(offer['id']),
-                      tooltip: 'حذف العرض',
-                    ),
-                  ],
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _deleteOffer(offer['id']),
+                    tooltip: 'حذف العرض',
+                  ),
                 ),
               ],
             ),
@@ -422,71 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-  void _showSellOfferDialog(BuildContext context, Map<String, dynamic> offer) {
-    final qtyController = TextEditingController(text: '1');
-    final noteController = TextEditingController();
-    Get.defaultDialog(
-      title: 'بيع العرض',
-      content: Column(
-        children: [
-          Text('العرض: ${offer['name']}'),
-          const SizedBox(height: 8),
-          TextField(
-            controller: qtyController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'الكمية من العرض'),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: noteController,
-            decoration: const InputDecoration(labelText: 'ملاحظة (اختياري)'),
-            maxLines: 2,
-          ),
-        ],
-      ),
-      textConfirm: 'تأكيد البيع',
-      textCancel: 'إلغاء',
-      confirmTextColor: Colors.white,
-      onConfirm: () async {
-        final qty = int.tryParse(qtyController.text) ?? 0;
-        if (qty <= 0) {
-          Get.snackbar(
-            'خطأ',
-            'الرجاء إدخال كمية صحيحة.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-          return;
-        }
-        final note = noteController.text.trim().isEmpty
-            ? null
-            : noteController.text.trim();
-        final cubit = context.read<InventoryCubit>();
-        final error =
-            await cubit.sellOffer(offer['id'] as int, qty, note);
-        Get.back();
-        if (error != null) {
-          Get.snackbar(
-            'خطأ',
-            error,
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-        } else {
-          Get.snackbar(
-            'نجاح',
-            'تم تسجيل عملية بيع العرض بنجاح.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
-        }
-      },
-    );
-  }
+  
 
   void _deleteProduct(int productId) {
     Get.defaultDialog(

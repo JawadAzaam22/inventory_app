@@ -1,9 +1,9 @@
 class Product {
-  int? id; // معرف المنتج (سيتم تعيينه تلقائيًا من قاعدة البيانات)
-  final String name; // اسم المنتج
-  final double priceInDollars; // سعر المنتج بالدولار
-  final int quantity; // الكمية المتاحة
-  final String? imagePath; // مسار صورة المنتج (اختياري)
+  int? id;
+  final String name;
+  final double priceInDollars;
+  final int quantity;
+  final String? imagePath;
 
   Product({
     this.id,
@@ -13,7 +13,6 @@ class Product {
     this.imagePath,
   });
 
-  // تحويل المنتج إلى Map لتخزينه في قاعدة البيانات
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -23,8 +22,6 @@ class Product {
       'imagePath': imagePath,
     };
   }
-
-  // إنشاء منتج من Map (عند القراءة من قاعدة البيانات)
   factory Product.fromMap(Map<String, dynamic> map) {
     return Product(
       id: map['id'],

@@ -1,4 +1,4 @@
-import 'dart:io'; // لاستخدام File
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,10 +8,11 @@ import 'package:inventory_app/bloc/inventory_cubit.dart';
 class EditProductScreen extends StatefulWidget {
   final Map<String, dynamic> product;
 
-  const EditProductScreen({Key? key, required this.product}) : super(key: key);
+  const EditProductScreen({super.key, required this.product});
 
   @override
-  _EditProductScreenState createState() => _EditProductScreenState();
+  @override
+  State<EditProductScreen> createState() => _EditProductScreenState();
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
@@ -20,7 +21,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final TextEditingController priceController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
   String? _selectedCategory;
-  String? _currentImagePath; // لتخزين مسار الصورة الحالي
+  String? _currentImagePath;
 
   @override
   void initState() {
@@ -29,7 +30,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     priceController.text = widget.product['priceInDollars'].toString();
     quantityController.text = widget.product['quantity'].toString();
     _selectedCategory = widget.product['category'];
-    _currentImagePath = widget.product['imagePath']; // تحميل مسار الصورة الحالي
+    _currentImagePath = widget.product['imagePath'];
   }
 
   Future<void> updateProduct() async {
@@ -39,7 +40,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
         'priceInDollars': double.tryParse(priceController.text) ?? 0.0,
         'quantity': int.tryParse(quantityController.text) ?? 0,
         'category': _selectedCategory ?? 'أخرى',
-        'imagePath': _currentImagePath, // الحفاظ على مسار الصورة الحالي
+        'imagePath': _currentImagePath,
       };
 
       await productController.updateProduct(widget.product['id'], updatedProduct);

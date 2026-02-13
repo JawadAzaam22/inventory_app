@@ -1,11 +1,10 @@
-// ملف جديد: lib/models/offer.dart
 class Offer {
-  int? id; // معرف العرض (سيتم تعيينه تلقائيًا من قاعدة البيانات)
-  final String name; // اسم العرض
-  final String description; // وصف العرض
-  final double priceInLira; // سعر العرض بالليرة السورية
-  final String imagePath; // مسار صورة العرض
-  final DateTime dateAdded; // تاريخ إضافة العرض
+  int? id;
+  final String name;
+  final String description;
+  final double priceInLira;
+  final String imagePath;
+  final DateTime dateAdded;
 
   Offer({
     this.id,
@@ -16,7 +15,6 @@ class Offer {
     required this.dateAdded,
   });
 
-  // تحويل العرض إلى Map لتخزينه في قاعدة البيانات
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -24,11 +22,9 @@ class Offer {
       'description': description,
       'priceInLira': priceInLira,
       'imagePath': imagePath,
-      'dateAdded': dateAdded.toIso8601String(), // تحويل التاريخ إلى نص
+      'dateAdded': dateAdded.toIso8601String(),
     };
   }
-
-  // إنشاء عرض من Map (عند القراءة من قاعدة البيانات)
   factory Offer.fromMap(Map<String, dynamic> map) {
     return Offer(
       id: map['id'],
@@ -36,7 +32,7 @@ class Offer {
       description: map['description'],
       priceInLira: map['priceInLira'],
       imagePath: map['imagePath'],
-      dateAdded: DateTime.parse(map['date']), // تحويل النص إلى تاريخ
+      dateAdded: DateTime.parse(map['date']),
     );
   }
 }

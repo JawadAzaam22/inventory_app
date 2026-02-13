@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inventory_app/bloc/inventory_cubit.dart';
+import 'package:inventory_app/features/inventory/presentation/bloc/inventory_state.dart';
 import 'package:inventory_app/services/pdf_report_service.dart';
 import 'package:printing/printing.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class ReportsScreen extends StatelessWidget {
+  const ReportsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.watch<InventoryCubit>();
@@ -32,7 +35,7 @@ class ReportsScreen extends StatelessWidget {
           children: [
             _buildAnalysisCard('الربح الفعلي', profitAnalysis['actual'] ?? 0.0),
             _buildAnalysisCard('أفضل سيناريو', profitAnalysis['best_case'] ?? 0.0),
-            _buildAnalysisCard('الفرق المحتمل', profitAnalysis['difference'] ?? 0.0),
+            _buildAnalysisCard('الفرق المحتمل', profitAnalysis['best_difference'] ?? 0.0),
             const SizedBox(height: 20),
             _buildExchangeRateChart(state),
             const SizedBox(height: 20),

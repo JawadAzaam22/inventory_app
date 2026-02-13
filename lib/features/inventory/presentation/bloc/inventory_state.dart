@@ -6,6 +6,7 @@ class InventoryState extends Equatable {
   final List<Map<String, dynamic>> sales;
   final List<Map<String, dynamic>> exchangeRates;
   final List<Map<String, dynamic>> offers;
+  final List<Map<String, dynamic>> cartItems;
   final List<String> categories;
   final double currentRate;
   final String searchQuery;
@@ -18,6 +19,7 @@ class InventoryState extends Equatable {
     this.sales = const [],
     this.exchangeRates = const [],
     this.offers = const [],
+  this.cartItems = const [],
     this.categories = const [],
     this.currentRate = 0.0,
     this.searchQuery = '',
@@ -31,6 +33,7 @@ class InventoryState extends Equatable {
     List<Map<String, dynamic>>? sales,
     List<Map<String, dynamic>>? exchangeRates,
     List<Map<String, dynamic>>? offers,
+  List<Map<String, dynamic>>? cartItems,
     List<String>? categories,
     double? currentRate,
     String? searchQuery,
@@ -43,6 +46,7 @@ class InventoryState extends Equatable {
       sales: sales ?? this.sales,
       exchangeRates: exchangeRates ?? this.exchangeRates,
       offers: offers ?? this.offers,
+  cartItems: cartItems ?? this.cartItems,
       categories: categories ?? this.categories,
       currentRate: currentRate ?? this.currentRate,
       searchQuery: searchQuery ?? this.searchQuery,
@@ -58,6 +62,7 @@ class InventoryState extends Equatable {
         sales,
         exchangeRates,
         offers,
+  cartItems,
         categories,
         currentRate,
         searchQuery,

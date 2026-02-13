@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import 'package:inventory_app/database/db_helper.dart';
 
 class ProductController extends GetxController {
@@ -8,10 +9,7 @@ class ProductController extends GetxController {
   final RxList<Map<String, dynamic>> sales = <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> exchangeRates = <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> offers = <Map<String, dynamic>>[].obs;
-  // قائمة التصنيفات المستخلصة من المنتجات + التي يضيفها المستخدم
   final RxList<String> categories = <String>[].obs;
-
-  // سلة المشتريات: كل عنصر يحتوي productId, name, priceInDollars, quantity
   final RxList<Map<String, dynamic>> cartItems = <Map<String, dynamic>>[].obs;
 
   final RxDouble currentRate = 0.0.obs;
@@ -32,7 +30,7 @@ class ProductController extends GetxController {
     exchangeRates.value = await db.query('exchange_rates');
     offers.value = await db.query('offers');
 
-    // تحديث التصنيفات بناءً على المنتجات الموجودة
+    
     final set = <String>{};
     for (final p in _allProducts) {
       final cat = (p['category'] ?? 'أخرى').toString();
@@ -87,7 +85,7 @@ class ProductController extends GetxController {
         whereArgs: [sale['productId']],
       );
     } else {
-      print('خطأ: المنتج بمعرف ${sale['productId']} غير موجود.');
+      debugPrint('خطأ: المنتج بمعرف ${sale['productId']} غير موجود.');
       return;
     }
 
@@ -168,7 +166,6 @@ class ProductController extends GetxController {
     }
   }
 
-  // --- التصنيفات ---
   void addCategory(String category) {
     final trimmed = category.trim();
     if (trimmed.isEmpty) return;
@@ -178,7 +175,7 @@ class ProductController extends GetxController {
     }
   }
 
-  // --- السلة ---
+  
   void addToCart(Map<String, dynamic> product, int quantity) {
     if (quantity <= 0) return;
     final productId = product['id'] as int;
@@ -222,7 +219,7 @@ class ProductController extends GetxController {
 
     final db = await DatabaseHelper().database;
 
-    // التحقق من توفر الكميات أولًا
+    
     for (final item in cartItems) {
       final productId = item['productId'] as int;
       final quantity = item['quantity'] as int;
@@ -236,7 +233,7 @@ class ProductController extends GetxController {
       }
     }
 
-    // تنفيذ عمليات البيع وتحديث المخزون
+    
     for (final item in cartItems) {
       final productId = item['productId'] as int;
       final quantity = item['quantity'] as int;
@@ -263,6 +260,6 @@ class ProductController extends GetxController {
 
     clearCart();
     await fetchAllData();
-    return null; // null تعني لا يوجد خطأ
+    return null;
   }
 }

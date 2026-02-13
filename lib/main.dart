@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:inventory_app/bloc/inventory_cubit.dart';
@@ -7,20 +8,48 @@ import 'package:inventory_app/screens/home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('FlutterError: ${details.exception}\n${details.stack}');
+  };
+
+  runZonedGuarded(() {
+    runApp(const MyApp());
+  }, (error, stack) {
+    debugPrint('Uncaught zone error: $error');
+    debugPrint('$stack');
+  });
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  static MyAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<MyAppState>();
+
+  @override
+  State<MyApp> createState() => MyAppState();
+}
+
+class MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void setThemeMode(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('MyApp build with themeMode=$_themeMode');
     return BlocProvider(
       create: (_) => InventoryCubit(DatabaseHelper())..loadAll(),
       child: GetMaterialApp(
         title: 'إدارة المخزون',
-        debugShowCheckedModeBanner: false, // لإزالة شارة debug
-        themeMode: ThemeMode.system, // يتبع وضع النظام (فاتح/غامق)
+        debugShowCheckedModeBanner: false,
+        themeMode: _themeMode,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: Colors.blue,
@@ -89,7 +118,6 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const Directionality(
-          // لتطبيق اتجاه النص من اليمين لليسار على مستوى التطبيق
           textDirection: TextDirection.rtl,
           child: HomeScreen(),
         ),

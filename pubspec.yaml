@@ -25,6 +25,7 @@ dependencies:
   image_picker: ^1.0.4
   pdf: ^3.10.2
   printing: ^5.11.1
+  path: ^1.8.3
   syncfusion_flutter_charts: ^22.1.40
   arabic_font: ^0.0.9
   flutter_launcher_icons: ^0.14.3

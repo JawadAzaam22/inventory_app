@@ -5,12 +5,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:inventory_app/bloc/inventory_cubit.dart';
+import 'package:inventory_app/features/inventory/presentation/bloc/inventory_state.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 class AddOfferScreen extends StatefulWidget {
+  const AddOfferScreen({super.key});
+
   @override
-  _AddOfferScreenState createState() => _AddOfferScreenState();
+  State<AddOfferScreen> createState() => _AddOfferScreenState();
 }
 
 class _AddOfferScreenState extends State<AddOfferScreen> {
@@ -19,7 +22,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   File? _image;
-  // productId -> quantityPerOffer
   final Map<int, int> _selectedProducts = {};
 
   Future<void> _pickImage() async {
@@ -170,7 +172,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                       ],
                     );
                   }),

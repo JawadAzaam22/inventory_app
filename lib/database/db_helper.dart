@@ -79,9 +79,7 @@ class DatabaseHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // إضافة عمود الملاحظة لجدول المبيعات
       await db.execute('ALTER TABLE sales ADD COLUMN note TEXT');
-      // إنشاء جدول ربط المنتجات بالعروض
       await db.execute('''
         CREATE TABLE IF NOT EXISTS offer_items(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,11 +91,10 @@ class DatabaseHelper {
     }
   }
 
-  // --- دالة جديدة لإغلاق قاعدة البيانات ---
   Future<void> closeDb() async {
     if (_database != null && _database!.isOpen) {
       await _database!.close();
-      _database = null; // إعادة تعيين لفرض إعادة الفتح في المرة القادمة
+      _database = null;
     }
   }
 }
